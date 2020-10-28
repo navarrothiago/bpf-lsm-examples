@@ -13,11 +13,11 @@
 
 #include "lsm.skel.h"
 
-char *CMD_ARGS[] = {"true", NULL};
+char *CMD_ARGS[] = {"ls", NULL};
 
 #define GET_PAGE_ADDR(ADDR, PAGE_SIZE)					\
 	(char *)(((unsigned long) (ADDR + PAGE_SIZE)) & ~(PAGE_SIZE-1))
-/*
+
 int stack_mprotect(void)
 {
 	void *buf;
@@ -33,7 +33,7 @@ int stack_mprotect(void)
 		       PROT_READ | PROT_WRITE | PROT_EXEC);
 	return ret;
 }
-*/
+
 int exec_cmd(int *monitored_pid)
 {
 	int child_pid, child_status;
@@ -66,14 +66,15 @@ int main(void)
 	if (err < 0)	goto close_prog;
 
 	fprintf(stdout, "bprm_count = %d\n", skel->bss->bprm_count);
+
 	skel->bss->monitored_pid = getpid();
-/*
 	err = stack_mprotect();
-	fprintf(stdout, "want err=EPERM, got %d\n", errno);
+	fprintf(stdout, "want err=1(EPERM), got %d\n", errno);
+
 	if (errno != EPERM)	goto close_prog;
 
 	fprintf(stdout, "mprotect_count = %d\n", skel->bss->mprotect_count);
-*/
+	
 close_prog:
 	lsm__destroy(skel);
 	return 0;

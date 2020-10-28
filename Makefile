@@ -5,6 +5,7 @@ BPFDIR := $(LIBDIR)/bpf
 TOOLSINCDIR := $(TOOLSDIR)/include
 APIDIR := $(TOOLSINCDIR)/uapi
 BPFLIB := $(BPFDIR)/libbpf.a
+VMLINUXPATH := /sys/kernel/btf/vmlinux
 
 CC ?= gcc
 LLC ?= llc
@@ -24,21 +25,26 @@ USR_SRC = $(patsubst %.c,$(USR_DIR)/%.c,$(USRCS))
 UOBJS = $(USRCS:.c=.o)
 USR_OBJ = $(patsubst %.o,$(USR_DIR)/%.o,$(UOBJS))
 USR_BIN = $(patsubst %.o,%,$(USR_OBJ))
-all: $(BPF_OBJ) $(USR_OBJ) $(USR_BIN)
+USR_SKEL = $(wildcard $(USR_DIR)/*.skel.h)
+
+#BPFTOOL_BTF :=$(shell bpftool btf dump file $(VMLINUX_PATH) format c > $(USR_DIR)/vmlinux.h)
+
+all: $(BPF_OBJ) $(USR_OBJ) $(USR_BIN) $(USR_SKEL)
 
 .PHONY: clean
 clean:
-	rm -f $(BPF_OBJ) $(USR_OBJ) $(USR_BIN)
+	rm -f $(BPF_OBJ) $(USR_OBJ) $(USR_BIN) $(USR_SKEL)
 
-# TODO: generate vmlinux.h using bpftool btf dump
 # TODO: specify dependency more precisely
 $(BPF_DIR)/%.o: $(BPF_DIR)/%.c $(BPF_DIR)/vmlinux.h
 	$(CLANG) $(CFLAGS) -target bpf -emit-llvm -c $< -o - | $(LLC) -mattr=dwarfris -march=bpf -mcpu=v3 -filetype=obj -o $@	
+	bpftool gen skeleton $@ > $(patsubst %.o, $(USR_DIR)/%.skel.h, $(notdir $@))	
 
 # TODO : generate %.skel.h using bpftool gen
 # TODO: specify dependency more precisely
 $(USR_DIR)/%.o: $(USR_DIR)/%.c
-	$(CC) $(CFLAGS) -c $< $(LDLIBS) -o $@	
+	$(CC) $(CFLAGS) -c $< $(LDLIBS) -o $@
+	
 
 $(USR_DIR)/% : $(USR_DIR)/%.o
 	$(CC) -I$(USR_DIR) $(CFLAGS) -o $@ $< $(LDLIBS) -L$(BPFDIR) -lbpf
