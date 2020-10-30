@@ -12,6 +12,7 @@
 #include <sys/resource.h>
 #include <linux/perf_event.h>
 #include <linux/ring_buffer.h>
+#include <linux/types.h>
 #include "uid.skel.h"
 
 #define PATHLEN 256
@@ -19,7 +20,7 @@
 static int freed = 0;
 
 struct output {
-	u32 uid;
+	__u32 uid;
 	char buf[PATHLEN];
 };
 

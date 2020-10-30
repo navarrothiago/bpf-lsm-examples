@@ -1,8 +1,7 @@
 CURDIR := $(abspath .)
-TOOLSDIR := $(abspath ../../tools)
-LIBDIR := $(TOOLSDIR)/lib
+LIBDIR := $(abspath ./lib)
 BPFDIR := $(LIBDIR)/bpf
-TOOLSINCDIR := $(TOOLSDIR)/include
+TOOLSINCDIR := $(LIBDIR)/include
 APIDIR := $(TOOLSINCDIR)/uapi
 BPFLIB := $(BPFDIR)/libbpf.a
 VMLINUXPATH := /sys/kernel/btf/vmlinux
@@ -10,7 +9,7 @@ VMLINUXPATH := /sys/kernel/btf/vmlinux
 CC ?= gcc
 LLC ?= llc
 CLANG ?= clang
-CFLAGS = -g -Wall -O2 -I$(CURDIR) -I$(LIBDIR) -I$(TOOLSINCDIR) -I$(APIDIR)
+CFLAGS = -g -Wall -O2 -I$(LIBDIR) -I$(TOOLSINCDIR) -I$(APIDIR)
 LDLIBS = -lcap -lelf -lz -lrt -lpthread
 
 BPF_DIR := $(CURDIR)/bpf
@@ -27,7 +26,8 @@ USR_OBJ = $(patsubst %.o,$(USR_DIR)/%.o,$(UOBJS))
 USR_BIN = $(patsubst %.o,%,$(USR_OBJ))
 USR_SKEL = $(wildcard $(USR_DIR)/*.skel.h)
 
-#BPFTOOL_BTF :=$(shell bpftool btf dump file $(VMLINUX_PATH) format c > $(USR_DIR)/vmlinux.h)
+VMLINUXH = $(wildcard $(BPF_DIR)/vmlinux.h)
+BPFTOOL_BTF := $(shell bpftool btf dump file $(VMLINUXPATH) format c > $(BPF_DIR)/vmlinux.h)
 
 all: $(BPF_OBJ) $(USR_OBJ) $(USR_BIN) $(USR_SKEL)
 
@@ -37,10 +37,12 @@ clean:
 
 # TODO: specify dependency more precisely
 $(BPF_DIR)/%.o: $(BPF_DIR)/%.c $(BPF_DIR)/vmlinux.h
+ifeq ($(VMLINUXH), )
+	$(BPFTOOL_BTF)
+endif
 	$(CLANG) $(CFLAGS) -target bpf -emit-llvm -c $< -o - | $(LLC) -mattr=dwarfris -march=bpf -mcpu=v3 -filetype=obj -o $@	
 	bpftool gen skeleton $@ > $(patsubst %.o, $(USR_DIR)/%.skel.h, $(notdir $@))	
-
-# TODO : generate %.skel.h using bpftool gen
+	
 # TODO: specify dependency more precisely
 $(USR_DIR)/%.o: $(USR_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< $(LDLIBS) -o $@

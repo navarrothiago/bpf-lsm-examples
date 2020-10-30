@@ -12,6 +12,7 @@
 #include <sys/resource.h>
 #include <linux/perf_event.h>
 #include <linux/ring_buffer.h>
+#include <linux/types.h>
 #include "owner.skel.h"
 
 #define PATHLEN 256
@@ -21,8 +22,8 @@ static int freed = 0;
 void sig_handler(int signo);
 
 struct output {
-	u32 uid;
-	u32 owneruid;
+	__u32 uid;
+	__u32 owneruid;
 	char buf[PATHLEN];
 };
 
