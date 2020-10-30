@@ -3,7 +3,6 @@ LIBDIR := $(abspath ./lib)
 BPFDIR := $(LIBDIR)/bpf
 TOOLSINCDIR := $(LIBDIR)/include
 APIDIR := $(TOOLSINCDIR)/uapi
-BPFLIB := $(BPFDIR)/libbpf.a
 VMLINUXPATH := /sys/kernel/btf/vmlinux
 
 CC ?= gcc
@@ -37,16 +36,20 @@ clean:
 
 # TODO: specify dependency more precisely
 $(BPF_DIR)/%.o: $(BPF_DIR)/%.c $(BPF_DIR)/vmlinux.h
-ifeq ($(VMLINUXH), )
+ifeq ($(VMLINUXH),)
 	$(BPFTOOL_BTF)
 endif
 	$(CLANG) $(CFLAGS) -target bpf -emit-llvm -c $< -o - | $(LLC) -mattr=dwarfris -march=bpf -mcpu=v3 -filetype=obj -o $@	
 	bpftool gen skeleton $@ > $(patsubst %.o, $(USR_DIR)/%.skel.h, $(notdir $@))	
 	
 # TODO: specify dependency more precisely
-$(USR_DIR)/%.o: $(USR_DIR)/%.c
+$(USR_DIR)/%.o: $(USR_DIR)/%.c $(USR_SKEL)
 	$(CC) $(CFLAGS) -c $< $(LDLIBS) -o $@
 	
 
 $(USR_DIR)/% : $(USR_DIR)/%.o
+ifeq ($(wildcard $(BPFDIR)/libbpf.a),)
+	cd $(BPFDIR) && make
+endif
 	$(CC) -I$(USR_DIR) $(CFLAGS) -o $@ $< $(LDLIBS) -L$(BPFDIR) -lbpf
+
