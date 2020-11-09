@@ -24,6 +24,8 @@ struct output {
 SEC("lsm/inode_readlink")
 int BPF_PROG(readlink_block, struct dentry *dentry, int ret)
 {
+	if (ret)	return ret;
+
 	struct output o;
 	int len;
 	o.pid = bpf_get_current_pid_tgid();	
