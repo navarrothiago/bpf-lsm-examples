@@ -1,4 +1,4 @@
-### Detection/Mitigation of the *subject*'s *operation* on the *object*.
+### Detection/Prevention of the *subject*'s *operation* on the *object*.
 
 - *subject* : The process who performs operation on the object
 	- Available data: Every data in the struct task of the process.
