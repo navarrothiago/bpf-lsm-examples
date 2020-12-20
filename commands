@@ -1,8 +1,12 @@
+# for kernel build
 sudo apt install build-essential libncurses5-dev bison flex libssl-dev libelf-dev bin86 kernel-package
 sudo wget http://archive.ubuntu.com/ubuntu/pool/universe/d/dwarves-dfsg/dwarves_1.17-1_amd64.deb
 sudo dpkg -i dwarves_1.17-1_amd64.deb
 sudo wget https://www.kernel.org/pub/linux/kernel/v5.x/linux-5.8.1.tar.xz -P /usr/src
-sudo apt install clang
+#for bpf&btf
+sudo apt install clang llvm libcap-dev binutils-dev libreadline-dev gcc-multilib
+# libc6-dev-i386
+
 #kernel config
 cd /usr/src/
 sudo xz -d linux-5.8.1.tar.xz
@@ -24,5 +28,6 @@ make defconfig && make kvm_guest.config && \
 make-kpkg clean
 make-kpkg -j4 --initrd kernel_image
 #reboot
+#.so directory /etc/ld.so.conf 
 ~                                                                              
 ~              
