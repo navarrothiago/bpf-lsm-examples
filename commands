@@ -4,7 +4,25 @@ sudo dpkg -i dwarves_1.17-1_amd64.deb
 sudo wget https://www.kernel.org/pub/linux/kernel/v5.x/linux-5.8.1.tar.xz -P /usr/src
 sudo apt install clang
 #kernel config
+cd /usr/src/
+sudo xz -d linux-5.8.1.tar.xz
+sudo tar xvf linux-5.8.1.tar
+cd linux-5.8.1
+su
+make defconfig && make kvm_guest.config && \
+  scripts/config \
+  -e BPF_SYSCALL \
+  -e BPF_LSM \
+  -e BPF_JIT \
+  -e DEBUG_INFO \
+  -e DEBUG_INFO_BTF \
+  -e FTRACE \
+  -e DYNAMIC_FTRACE \
+  -e FUNCTION_TRACER && \
+  make olddefconfig
 #kernel make
+make-kpkg clean
+make-kpkg -j4 --initrd kernel_image
 #reboot
 ~                                                                              
 ~              
