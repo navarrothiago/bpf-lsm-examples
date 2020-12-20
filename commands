@@ -28,6 +28,8 @@ make defconfig && make kvm_guest.config && \
 make-kpkg clean
 make-kpkg -j4 --initrd kernel_image
 #reboot
+# make tools/bpf
+# cp tools/bpf/bpftool/bpftool /usr/sbin
 #.so directory /etc/ld.so.conf 
 ~                                                                              
 ~              
